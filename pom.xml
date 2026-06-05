@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.antoined</groupId>
+        <artifactId>agentic-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../agentic-parent/pom.xml</relativePath>
+    </parent>
+
+    <groupId>org.antoined</groupId>
+    <artifactId>vaadin-graph</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Vaadin Graph</name>
+    <description>A Vaadin component for rendering zoomable, pannable graph workspaces.</description>
+
+    <modules>
+        <module>vaadin-graph-component</module>
+        <module>vaadin-graph-karibu</module>
+        <module>vaadin-graph-demo</module>
+    </modules>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/adumeige/vaadin-graph</url>
+        </repository>
+    </distributionManagement>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Internal sibling artifacts, version-aligned with the reactor. -->
+            <dependency>
+                <groupId>org.antoined</groupId>
+                <artifactId>vaadin-graph-component</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.antoined</groupId>
+                <artifactId>vaadin-graph-karibu</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>
