@@ -118,6 +118,20 @@ mvn -pl vaadin-graph-demo spring-boot:run
 > A TypeScript-only change isn't always detected — if a frontend edit doesn't show up, build with
 > `-Dvaadin.force.production.build=true` (or delete that `bundles/` directory).
 
+## CI / publishing
+
+[`.github/workflows/maven-publish.yml`](.github/workflows/maven-publish.yml) builds the reactor and
+publishes the libraries — `vaadin-graph-component`, `vaadin-graph-karibu`, and the reactor pom — to
+**GitHub Packages** (`maven.pkg.github.com/adumeige/vaadin-graph`) on pushes to `main`, on `v*` tags,
+and on manual dispatch. Pull requests run a full `-Pproduction verify` without publishing. The demo
+module is build-only (`maven.deploy.skip=true`) and never published.
+
+Because the Maven parent (`org.antoined:agentic-parent`) lives in a *separate* repo, CI resolves it
+from GitHub Packages via [`.github/maven-settings.xml`](.github/maven-settings.xml). Set a repository
+secret **`MAVEN_TOKEN`** to a PAT (classic) with `read:packages` + `write:packages` — it needs read
+access to `adumeige/agentic-parent` and write access to this repo's packages. (The job falls back to
+`GITHUB_TOKEN`, which can publish here but usually can't read the parent from the other repo.)
+
 ## Known limitations
 
 - Edges are clickable but have no hover/highlight affordance.

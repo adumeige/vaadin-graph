@@ -1,0 +1,73 @@
+name: Publish
+
+# Builds the reactor and publishes the library artifacts (vaadin-graph-component,
+# vaadin-graph-karibu, and the reactor pom) to GitHub Packages. The demo module is
+# build-only (maven.deploy.skip=true) and is never published.
+#
+# Auth: set a repository secret MAVEN_TOKEN to a PAT (classic) with read:packages +
+# write:packages. It needs READ access to adumeige/agentic-parent (the Maven parent,
+# resolved from GitHub Packages) and WRITE access to this repo's packages. Without the
+# secret the job falls back to GITHUB_TOKEN, which can publish here but usually cannot
+# read the parent from the other repo.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MAVEN_USERNAME: ${{ github.repository_owner }}
+      MAVEN_TOKEN: ${{ secrets.MAVEN_TOKEN || secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Pull requests: full build incl. the demo's production frontend bundle. No publish.
+      - name: Build & verify
+        if: github.event_name == 'pull_request'
+        run: mvn -B -ntp -s .github/maven-settings.xml -Pproduction verify
+
+      # main / tags / manual: build the reactor and deploy the libraries to GitHub Packages.
+      - name: Deploy to GitHub Packages
+        if: github.event_name != 'pull_request'
+        run: mvn -B -ntp -s .github/maven-settings.xml deploy
+
+      - name: Upload library jars
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vaadin-graph-jars
+          path: |
+            vaadin-graph-component/target/*.jar
+            vaadin-graph-karibu/target/*.jar
+          if-no-files-found: warn
+          retention-days: 7

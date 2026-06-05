@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  CI Maven settings.
+
+  - `github` server: credentials used both to RESOLVE the parent (`org.antoined:agentic-parent`,
+    published to GitHub Packages in the separate adumeige/agentic-parent repo) and to DEPLOY this
+    project's artifacts (distributionManagement id is also `github`).
+  - `github-packages` profile: adds the agentic-parent GitHub Packages repository so Maven can
+    download the parent pom on a clean checkout (the ../agentic-parent relativePath is absent in CI).
+
+  MAVEN_USERNAME / MAVEN_TOKEN are provided by the workflow. MAVEN_TOKEN must be able to READ
+  packages from adumeige/agentic-parent and WRITE packages to adumeige/vaadin-graph — cross-repo
+  reads generally require a PAT (classic) with read:packages + write:packages set as the MAVEN_TOKEN
+  secret. The default GITHUB_TOKEN can write to this repo but cannot read the other repo's packages.
+-->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+    <servers>
+        <server>
+            <id>github</id>
+            <username>${env.MAVEN_USERNAME}</username>
+            <password>${env.MAVEN_TOKEN}</password>
+        </server>
+    </servers>
+
+    <profiles>
+        <profile>
+            <id>github-packages</id>
+            <repositories>
+                <repository>
+                    <id>github</id>
+                    <name>agentic-parent (GitHub Packages)</name>
+                    <url>https://maven.pkg.github.com/adumeige/agentic-parent</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+
+    <activeProfiles>
+        <activeProfile>github-packages</activeProfile>
+    </activeProfiles>
+</settings>
