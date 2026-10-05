@@ -41,7 +41,7 @@ TypeScript string-literal unions exactly (e.g. `EdgeRouting.CURVED` ⇄ `'CURVED
 
 ```
 vaadin-graph-component/src/main/
-  java/org/antoined/vaadin/graph/
+  java/io/github/adumeige/vaadin/graph/
     component/   WorkspaceView, NodeClickEvent, EdgeClickEvent
     model/       WorkspaceDescriptor, EdgeDescriptor, WorkspaceGrid,
                  WorkspaceState / NodeState / EdgeState / ViewportState,

@@ -101,8 +101,10 @@ between the 6-node sample and a generated ~150-node graph.
 
 ## Build & run
 
-Versions and plugins are inherited from [`agentic-parent`](../agentic-parent) (Vaadin 24, Java 21,
-Kotlin 2.3, Spring Boot 3.5); install it first if needed (`mvn -N install` in `../agentic-parent`).
+Versions and plugins are inherited from
+[`agentic-parent`](https://github.com/adumeige/agentic-parent) version `1.0.0`
+(Vaadin 24, Java 21, Kotlin 2.3, Spring Boot 3.5). Publish that parent to Central
+before building this project; Maven resolves it without GitHub credentials.
 
 ```bash
 # Build everything (production frontend bundle included)
@@ -118,19 +120,92 @@ mvn -pl vaadin-graph-demo spring-boot:run
 > A TypeScript-only change isn't always detected — if a frontend edit doesn't show up, build with
 > `-Dvaadin.force.production.build=true` (or delete that `bundles/` directory).
 
+## Maven packages and migration
+
+After version `1.0.0` is published to Maven Central:
+
+```xml
+<dependency>
+    <groupId>io.github.adumeige.vaadin-graph</groupId>
+    <artifactId>vaadin-graph-component</artifactId>
+    <version>1.0.0</version>
+</dependency>
+<!-- Optional Kotlin/Karibu DSL -->
+<dependency>
+    <groupId>io.github.adumeige.vaadin-graph</groupId>
+    <artifactId>vaadin-graph-karibu</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+No additional repository or credentials are needed for Central downloads.
+Java and Kotlin packages use `io.github.adumeige.vaadin.graph` and its subpackages;
+consumers migrating from `org.antoined.vaadin.graph` must update imports.
+The reactor uses `io.github.adumeige.agentic-parent:agentic-parent:1.0.0`.
+
+The same signed artifacts are mirrored to
+[GitHub Packages](https://github.com/adumeige/vaadin-graph/packages) and attached to
+[GitHub Releases](https://github.com/adumeige/vaadin-graph/releases). GitHub Packages
+still requires authenticated Maven downloads; Central is recommended for consumers.
+
 ## CI / publishing
 
-[`.github/workflows/maven-publish.yml`](.github/workflows/maven-publish.yml) builds the reactor and
-publishes the libraries — `vaadin-graph-component`, `vaadin-graph-karibu`, and the reactor pom — to
-**GitHub Packages** (`maven.pkg.github.com/adumeige/vaadin-graph`) on pushes to `main`, on `v*` tags,
-and on manual dispatch. Pull requests run a full `-Pproduction verify` without publishing. The demo
-module is build-only (`maven.deploy.skip=true`) and never published.
+Pushes and pull requests build the full reactor and demo production frontend, then
+verify Java/Kotlin sources and API documentation for the libraries. They do not
+publish. The demo is excluded from releases; published artifacts are the
+`vaadin-graph` parent POM, `vaadin-graph-component`, and `vaadin-graph-karibu`.
+Component docs use Java Javadoc; Karibu docs use Dokka.
 
-Because the Maven parent (`org.antoined:agentic-parent`) lives in a *separate* repo, CI resolves it
-from GitHub Packages via [`.github/maven-settings.xml`](.github/maven-settings.xml). Set a repository
-secret **`MAVEN_TOKEN`** to a PAT (classic) with `read:packages` + `write:packages` — it needs read
-access to `adumeige/agentic-parent` and write access to this repo's packages. (The job falls back to
-`GITHUB_TOKEN`, which can publish here but usually can't read the parent from the other repo.)
+Set these repository secrets in **Settings → Secrets and variables → Actions**:
+
+| Secret | Value |
+| --- | --- |
+| `CENTRAL_USERNAME` | Sonatype Central Portal token username |
+| `CENTRAL_PASSWORD` | Sonatype Central Portal token password |
+| `GPG_PRIVATE_KEY` | Full ASCII-armored exported private signing key |
+| `GPG_PASSPHRASE` | Signing key passphrase |
+
+Reuse the existing account token and signing key. The `io.github.adumeige`
+namespace must be verified in Central; the public key must be on a supported
+keyserver, such as `keyserver.ubuntu.com`. GitHub publishing uses the built-in
+`GITHUB_TOKEN`. The former cross-repo `MAVEN_TOKEN` setup is no longer needed.
+
+1. Publish `agentic-parent:1.0.0` to Central first.
+2. Merge this project's release changes into `main` and check that CI passes.
+3. Open **Actions → Build and publish Vaadin Graph → Run workflow**.
+4. Select `main` and a new release version, initially `1.0.0`.
+5. The workflow creates a versioned release commit, builds and signs once, and
+   automatically publishes to Central, waiting up to an hour for completion.
+6. It creates an annotated `v<version>` tag and draft GitHub Release, mirrors and
+   verifies the exact signed artifacts in GitHub Packages, attaches downloads,
+   and makes the release public with generated notes.
+
+No final portal **Publish** click is needed. The tag points to the versioned POM
+commit; `main` keeps its snapshot version. Tags do not trigger another publication.
+Versions are immutable once published.
+
+### Recover an interrupted release
+
+Central and GitHub publish sequentially. If Central succeeds and the GitHub job
+fails, use **Re-run failed jobs** on that same Actions run. Its signed bundle and
+release source are retained for 90 days. Existing identical package files are
+skipped; conflicting files are rejected. The GitHub Release remains a draft until
+its package mirror and assets succeed, although its tag may already be visible.
+
+Do not rerun all jobs or start a fresh run for a version already published to
+Central. If Central itself fails or times out, check the deployment in
+[Central Portal](https://central.sonatype.com/publishing/deployments) before recovery:
+publication may have continued after the runner stopped. The saved bundle allows
+manual recovery without rebuilding.
+
+To verify release artifacts without signing or uploading:
+
+```bash
+mvn -Pcentral-release verify -pl '!vaadin-graph-demo' -Dgpg.skip=true
+```
+
+A local `-Pcentral-release deploy` stages for manual approval by default;
+the workflow explicitly enables automatic publication.
 
 ## Known limitations
 
