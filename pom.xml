@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.antoined</groupId>
+        <groupId>io.github.adumeige.agentic-parent</groupId>
         <artifactId>agentic-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../agentic-parent/pom.xml</relativePath>
+        <version>1.0.0</version>
+        <relativePath/>
     </parent>
 
-    <groupId>org.antoined</groupId>
+    <groupId>io.github.adumeige.vaadin-graph</groupId>
     <artifactId>vaadin-graph</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -19,34 +19,106 @@
     <name>Vaadin Graph</name>
     <description>A Vaadin component for rendering zoomable, pannable graph workspaces.</description>
 
+    <url>https://github.com/adumeige/vaadin-graph</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>adumeige</id>
+            <name>Antoine Dumeige</name>
+            <url>https://github.com/adumeige</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/adumeige/vaadin-graph.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/adumeige/vaadin-graph.git</developerConnection>
+        <url>https://github.com/adumeige/vaadin-graph</url>
+    </scm>
+
     <modules>
         <module>vaadin-graph-component</module>
         <module>vaadin-graph-karibu</module>
         <module>vaadin-graph-demo</module>
     </modules>
 
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/adumeige/vaadin-graph</url>
-        </repository>
-    </distributionManagement>
-
     <dependencyManagement>
         <dependencies>
             <!-- Internal sibling artifacts, version-aligned with the reactor. -->
             <dependency>
-                <groupId>org.antoined</groupId>
+                <groupId>io.github.adumeige.vaadin-graph</groupId>
                 <artifactId>vaadin-graph-component</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.antoined</groupId>
+                <groupId>io.github.adumeige.vaadin-graph</groupId>
                 <artifactId>vaadin-graph-karibu</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
+    <profiles>
+        <profile>
+            <id>central-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.4.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.8</version>
+                        <configuration>
+                            <signer>bc</signer>
+                            <bestPractices>true</bestPractices>
+                            <keyEnvName>MAVEN_GPG_KEY</keyEnvName>
+                            <passphraseEnvName>MAVEN_GPG_PASSPHRASE</passphraseEnvName>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.11.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>${central.autoPublish}</autoPublish>
+                            <waitUntil>${central.waitUntil}</waitUntil>
+                            <waitMaxTime>3600</waitMaxTime>
+                            <deploymentName>${project.groupId}:${project.version}</deploymentName>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
