@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.github.adumeige.vaadin-graph</groupId>
         <artifactId>vaadin-graph</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.0</version>
     </parent>
 
     <artifactId>vaadin-graph-demo</artifactId>
